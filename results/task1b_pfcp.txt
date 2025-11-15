@@ -1,0 +1,47 @@
+Processing 5G-PFCP dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP
+[PFCP] Flow dictionary size: 133 flows
+[PFCP] Loaded 3,081,410 packets into DataFrame.
+[PFCP-1b] Loaded 3,081,410 packets into DataFrame.
+
+[Packet length stats] Application protocols – WITH attacks (only Attack packets, has_app_data=True)
+                          count      mean       std    median
+app_proto                                                    
+PFCP                     792688   120.602   109.803    58.000
+TCP                       36644   181.200   470.435   131.000
+TLSv1.2                     216 5,869.699 5,043.497 4,398.000
+HTTP2                       146   108.014    41.599    90.000
+TLSv1.3                      36 1,943.722 1,166.392 2,953.000
+HTTP2/JSON                   28   322.000   208.000   404.000
+HTTP2/JSON/NGAP               6   387.000    32.533   366.000
+HTTP2/JSON/NAS-5GS/NGAP       4   831.000     0.000   831.000
+HTTP2/JSON/NAS-5GS            4 1,197.000     0.000 1,197.000
+HTTP                          2 2,449.500 3,178.445 2,449.500
+
+[Packet length stats] Application protocols – WITHOUT attacks (Normal+Unlabeled, has_app_data=True)
+                           count      mean     std    median
+app_proto                                                   
+PFCP                     1378533    74.968  17.518    63.000
+TCP                       233593   126.598  19.292   132.000
+UDP                       181394   121.884  34.834   117.000
+GTP/ICMP                  117262   142.006   0.401   142.000
+ICMP                       58727    98.011   0.566    98.000
+MDNS                        1692   124.612  50.347   102.000
+HTTP2                        680   107.478  39.287    90.000
+HTTP2/JSON                   194   341.696 263.016   247.000
+MONGO                        130   462.269 342.423   247.500
+HTTP2/JSON/NAS-5GS             6 1,197.000   0.000 1,197.000
+HTTP2/JSON/NAS-5GS/NGAP        6   831.000   0.000   831.000
+HTTP2/JSON/NGAP                6   366.000   0.000   366.000
+
+[Inter-arrival stats] WITH attacks (Attack packets only, same host_pair)
+  #Intervals: 854,558
+  Mean   IAT: 19.482023 seconds
+  Std    IAT: 5856.147569 seconds
+  Median IAT: 0.000050 seconds
+
+[Inter-arrival stats] WITHOUT attacks (Normal+Unlabeled packets, same host_pair)
+  #Intervals: 2,226,242
+  Mean   IAT: 39.565210 seconds
+  Std    IAT: 7876.642023 seconds
+  Median IAT: 0.000069 seconds
+Task 1b (5G-PFCP) analysis complete.

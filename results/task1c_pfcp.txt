@@ -1,0 +1,26 @@
+Task 1c: 5G-PFCP – Host Pair & IAT Analysis
+Processing 5G-PFCP dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP
+[PFCP] Flow dictionary size: 133 flows
+[PFCP] Loaded 3,081,410 packets into DataFrame.
+[Host pairs]
+  Total unique host pairs in dataset: 45
+  Host pairs with at least one Attack packet: 8
+  Fraction of host pairs with attacks: 17.78%
+
+[Task 1c – IAT stats] WITHOUT attacks
+  Condition: same host pair + same application-layer protocol
+  Time unit: seconds (frame.time_epoch)
+  Average IAT: 68.631478 s
+  Std IAT:     11076.481096 s
+  Median IAT:  0.000069 s
+  #Intervals:  2,226,216
+
+[Task 1c – IAT stats] WITH attacks
+  Condition: same host pair + same application-layer protocol
+  Time unit: seconds (frame.time_epoch)
+  Average IAT: 48.227057 s
+  Std IAT:     10054.758101 s
+  Median IAT:  0.000050 s
+  #Intervals:  854,545
+
+End of Task 1c (5G-PFCP)

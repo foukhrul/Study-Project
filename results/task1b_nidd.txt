@@ -1,0 +1,16 @@
+Processing 5G-NIDD dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+Traceback (most recent call last):
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/task1b_nidd.py", line 141, in <module>
+    main()
+    ~~~~^^
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/task1b_nidd.py", line 80, in main
+    df = load_nidd_packets(root)
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/core_nidd.py", line 294, in load_nidd_packets
+    flow_dict = build_nidd_flow_dict_from_csvs(root_folder)
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/core_nidd.py", line 142, in build_nidd_flow_dict_from_csvs
+    proto_str = str(row.get(proto_col, "")).strip().lower()
+                    ~~~~~~~^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/site-packages/pandas/core/generic.py", line 4548, in get
+    @final
+    
+KeyboardInterrupt

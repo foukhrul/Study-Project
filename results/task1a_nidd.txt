@@ -1,0 +1,41 @@
+Processing 5G-NIDD dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+max_rows_per_csv = 0
+NIDD root: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+Flow dictionary built from CSVs: 208463 labeled flows
+Found 208463 CSV-labeled flows
+Found 40 pcap/pcapng files
+Reading pcap: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD/BS2_pcap/SYNScan_BS2.pcapng
+iter_nidd_packets: pcap=SYNScan_BS2.pcapng, total=72958, matched=62, exit=0
+Reading pcap: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD/BS2_pcap/UDPScan_BS2.pcapng
+iter_nidd_packets: pcap=UDPScan_BS2.pcapng, total=92204, matched=1094, exit=0
+Reading pcap: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD/BS2_pcap/ICMPflood_BS2.pcapng
+iter_nidd_packets: pcap=ICMPflood_BS2.pcapng, total=313667, matched=12149, exit=0
+Reading pcap: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD/BS2_pcap/SSH_BS2.pcapng
+iter_nidd_packets: pcap=SSH_BS2.pcapng, total=8059, matched=586, exit=0
+Reading pcap: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD/BS2_pcap/SYNflood_BS2.pcapng
+iter_nidd_packets: pcap=SYNflood_BS2.pcapng, total=93312, matched=8061, exit=0
+Reading pcap: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD/BS2_pcap/UDPflood_BS2.pcapng
+Traceback (most recent call last):
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/task1a_nidd.py", line 185, in <module>
+    main()
+    ~~~~^^
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/task1a_nidd.py", line 171, in main
+    df = load_nidd_packets(
+        root=args.root,
+        max_rows_per_csv=args.max_rows_csv if args.max_rows_csv > 0 else None,
+        max_packets_per_pcap=args.max_pkts_pcap,
+    )
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/core_nidd.py", line 398, in load_nidd_packets
+    for pkt in iter_nidd_packets(
+               ~~~~~~~~~~~~~~~~~^
+        p,
+        ^^
+        flow_dict=flow_dict,
+        ^^^^^^^^^^^^^^^^^^^^
+        max_packets=max_packets_per_pcap,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/Code/core_nidd.py", line 245, in iter_nidd_packets
+    line = proc.stdout.readline()
+KeyboardInterrupt
