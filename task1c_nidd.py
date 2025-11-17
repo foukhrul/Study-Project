@@ -62,7 +62,7 @@ def iat_stats_by_hostpair_app(df: pd.DataFrame, title: str) -> None:
     required = {"src_ip", "dst_ip", "app_proto", "ts"}
     missing = required - set(df.columns)
     if missing:
-        print(f"[NIDD-1c] Missing required columns for IAT stats: {missing}")
+        print(f"Missing required columns for IAT stats: {missing}")
         return
 
     print_header(title)
@@ -125,7 +125,7 @@ def main() -> None:
     df = load_nidd_packets(root=args.root)
 
     if df is None or df.empty:
-        print("[NIDD-1c] DataFrame is empty, nothing to analyze.")
+        print("DataFrame is empty, nothing to analyze.")
         return
 
     # Basic cleaning

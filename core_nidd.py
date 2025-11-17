@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 import subprocess
@@ -9,7 +10,9 @@ import pandas as pd
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_NIDD_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "5G_NIDD"))
 
+# ==========================
 # Protocol / Port helpers
+# ==========================
 
 # প্রোটোকল নাম → নম্বর (IPv4 proto field এর মত)
 PROTO_MAP = {
@@ -32,9 +35,20 @@ PORT_NAME_MAP = {
 }
 
 
+def _safe_int(x, default: int = 0) -> int:
+    try:
+        return int(str(x).strip())
+    except Exception:
+        return default
+
+
 def convert_port(val) -> int:
-    """ CSV থেকে আসা port value কে int-এ convert করে: - '443'    -> 443 - 'https'  -> 443
-    - '0x0016' -> 22 """
+    """
+    CSV থেকে আসা port value কে int-এ convert করে:
+      - '443'    -> 443
+      - 'https'  -> 443
+      - '0x0016' -> 22
+    """
     if pd.isna(val):
         return 0
     s = str(val).strip()
@@ -67,7 +81,10 @@ def canon_flow_key(
     dport: int,
     proto_num: int,
 ) -> Tuple[str, str, int, int, int]:
-    """ Symmetric 5-tuple: (ip1, ip2, p1, p2, proto) যে direction-ই হোক, একই flow একই key পাবে।"""
+    """
+    Symmetric 5-tuple: (ip1, ip2, p1, p2, proto)
+    যে direction-ই হোক, একই flow একই key পাবে।
+    """
     src_ip = str(src_ip)
     dst_ip = str(dst_ip)
     sport = int(sport)
@@ -91,13 +108,16 @@ def build_nidd_flow_dict_from_csvs(
     max_rows_per_file: Optional[int] = None,
     verbose: bool = False,
 ) -> Dict[Tuple[str, str, int, int, int], Dict[str, Any]]:
+
     """ 5G-NIDD CSV ফাইলগুলো থেকে flow_dict বানায়। key: (ip1, ip2, p1, p2, proto_num)  # symmetric
-    val: { "label": "Normal"/"Attack"/"Unlabeled",
+    val:{
+          "label": "Normal"/"Attack"/"Unlabeled",
           "is_attack": bool,
           "attack_type": str,
-          "src_file": "Goldeneye1.csv", ...}
+          "src_file": "Goldeneye1.csv", ...
+        }
     এখানে আমরা মূলত BS1_each_attack_csv / BS2_each_attack_csv use করব।
-    BTS_1 / BTS_2 / Combined / Encoded / *argus* নামের CSV গুলো ignore করা হবে। """
+    BTS_1 / BTS_2 / Combined / Encoded / *argus* নামের CSV গুলো ignore করা হবে।"""
 
     flow_dict: Dict[Tuple[str, str, int, int, int], Dict[str, Any]] = {}
 
@@ -116,7 +136,7 @@ def build_nidd_flow_dict_from_csvs(
                 or "encoded.csv" in fname_low
                 or "argus" in fname_low
             ):
-                # ইচ্ছে করে কিছু print করছি না, যাতে output clean থাকে
+                # output clean রাখার জন্য এখানে কিছু print করিনি
                 continue
 
             csv_path = os.path.join(root, f)
@@ -129,7 +149,7 @@ def build_nidd_flow_dict_from_csvs(
                 )
             except Exception as e:
                 if verbose:
-                    print(f"[NIDD] Error reading CSV {csv_path}: {e}")
+                    print(f"Error reading CSV {csv_path}: {e}")
                 continue
 
             # সব column lower-case
@@ -152,7 +172,7 @@ def build_nidd_flow_dict_from_csvs(
 
             if missing:
                 if verbose:
-                    print(f"[NIDD] Skipping {csv_path}: missing {missing}")
+                    print(f"Skipping {csv_path}: missing {missing}")
                 continue
 
             for _, row in df.iterrows():
@@ -192,8 +212,6 @@ def build_nidd_flow_dict_from_csvs(
                     "src_file": os.path.basename(csv_path),
                 }
 
-    print(f"Flow dictionary built from CSVs: {len(flow_dict)} labeled flows")
-    print(f"Found {len(flow_dict)} CSV-labeled flows")
     return flow_dict
 
 # pcap/pcapng → packet iterator (tshark)
@@ -203,15 +221,18 @@ def iter_nidd_packets(
     flow_dict: Optional[Dict[Tuple[str, str, int, int, int], Dict[str, Any]]] = None,
     max_packets: Optional[int] = None,
 ):
-    """ এক একটা packet থেকে তথ্য বের করে dict আকারে yield করে।
-আপাতত outer ip.src / ip.dst + TCP/UDP ports + ip.proto ব্যবহার করছি। """
+    """
+    এক একটা packet থেকে তথ্য বের করে dict আকারে yield করে।
+    আপাতত outer ip.src / ip.dst + TCP/UDP/SCTP ports + ip.proto ব্যবহার করছি,
+    সাথে tcp.len / udp.length / data.len থেকে app_len/header_len বের করছি।
+    """
 
     cmd: List[str] = [
         "tshark", "-r", pcap_path, "-T", "fields",
         "-n",
         # GTP dissector enforce করে রাখি, কিন্তু এখানে inner IP ব্যবহার করছিনা
         "-d", "udp.port==2152,gtp",
-        # outer IP + transport ports + proto + protocol column + ts + frame len
+        # outer IP + transport ports + proto + protocol column + frame len + ts + L4 payload
         "-e", "ip.src",
         "-e", "ip.dst",
         "-e", "tcp.srcport",
@@ -222,8 +243,11 @@ def iter_nidd_packets(
         "-e", "sctp.dstport",
         "-e", "ip.proto",
         "-e", "_ws.col.Protocol",
-        "-e", "frame.time_epoch",
         "-e", "frame.len",
+        "-e", "frame.time_epoch",
+        "-e", "tcp.len",
+        "-e", "udp.length",
+        "-e", "data.len",
     ]
 
     try:
@@ -269,9 +293,13 @@ def iter_nidd_packets(
             sctp_dport,
             ip_proto_str,
             proto_col,
-            ts_str,
             frame_len_str,
+            ts_str,
         ) = parts[:12]
+
+        tcp_len = parts[12].strip() if len(parts) > 12 else ""
+        udp_len = parts[13].strip() if len(parts) > 13 else ""
+        data_len = parts[14].strip() if len(parts) > 14 else ""
 
         src_ip = ip_src.strip()
         dst_ip = ip_dst.strip()
@@ -310,13 +338,25 @@ def iter_nidd_packets(
         except ValueError:
             ts = 0.0
 
-        try:
-            frame_len = int(frame_len_str)
-        except ValueError:
-            frame_len = 0
+        frame_len = _safe_int(frame_len_str, default=0)
 
         src_port_int = convert_port(sport_str)
         dst_port_int = convert_port(dport_str)
+
+        # ---- approx application payload length (L4 payload) ----
+        l4_payload = None
+        for candidate in (tcp_len, udp_len):
+            if candidate:
+                l4_payload = _safe_int(candidate, default=0)
+                break
+        if l4_payload is None and data_len:
+            l4_payload = _safe_int(data_len, default=0)
+        if l4_payload is None:
+            l4_payload = 0
+
+        app_len = max(l4_payload, 0)
+        header_len = max(frame_len - app_len, 0) if frame_len > 0 else 0
+        has_app_data = app_len > 0
 
         label = "Unlabeled"
         is_attack = False
@@ -333,6 +373,13 @@ def iter_nidd_packets(
                 src_file = meta.get("src_file")
                 attack_type = meta.get("attack_type")
 
+        # host_pair (unordered): min(ip1, ip2) <-> max(ip1, ip2)
+        if src_ip and dst_ip:
+            ip1, ip2 = sorted([src_ip, dst_ip])
+            host_pair = f"{ip1} <-> {ip2}"
+        else:
+            host_pair = None
+
         yield {
             "file": filename,
             "ts": ts,
@@ -344,6 +391,10 @@ def iter_nidd_packets(
             "transport": transport,         # TCP/UDP/ICMP/...
             "app_proto": proto_col,         # tshark protocol column (e.g., GTP/UDP, HTTP)
             "pkt_len": frame_len,
+            "header_len": header_len,
+            "app_len": app_len,
+            "has_app_data": has_app_data,
+            "host_pair": host_pair,
             "label": label,
             "is_attack": int(is_attack),
             "src_file": src_file,
@@ -352,10 +403,13 @@ def iter_nidd_packets(
 
     ret = proc.wait()
     stderr = proc.stderr.read().strip()
-    sys.stderr.write(
-        f"iter_nidd_packets: pcap={filename}, "
-        f"total={total}, matched={matched}, exit={ret}\n"
-    )
+
+    # debug করার দরকার হলে uncomment:
+    # sys.stderr.write(
+    #     f"iter_nidd_packets: pcap={filename}, "
+    #     f"total={total}, matched={matched}, exit={ret}\n"
+    # )
+
     if ret != 0 and stderr:
         sys.stderr.write(
             f"tshark stderr for {filename}:\n{stderr}\n"
@@ -368,10 +422,12 @@ def load_nidd_packets(
     max_rows_per_csv: Optional[int] = None,
     max_packets_per_pcap: Optional[int] = None,
 ) -> pd.DataFrame:
-    """ 5G-NIDD root থেকে:
+    """
+    5G-NIDD root থেকে:
       1) সব CSV পড়ে flow_dict বানায়
       2) সব pcap/pcapng থেকে packet পড়ে label assign করে
-      3) সব মিলিয়ে pandas DataFrame return দেয়  """
+      3) সব মিলিয়ে pandas DataFrame return দেয়
+    """
     root = os.path.abspath(root)
     print(f"NIDD root: {root}")
 
@@ -390,11 +446,8 @@ def load_nidd_packets(
             if lf.endswith(".pcap") or lf.endswith(".pcapng"):
                 pcap_files.append(os.path.join(r, f))
 
-    print(f"Found {len(pcap_files)} pcap/pcapng files")
-
     rows: List[Dict[str, Any]] = []
     for p in pcap_files:
-        print(f"Reading pcap: {p}")
         for pkt in iter_nidd_packets(
             p,
             flow_dict=flow_dict,

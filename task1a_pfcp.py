@@ -58,7 +58,10 @@ def report_task1a_pfcp(df: pd.DataFrame):
         print(f"  Fraction of host pairs with attacks: {attack_pairs / unique_pairs:.2%}")
 
     # ---------------- Application-layer protocols ----------------
+
     print("\n[Application-layer protocols]")
+    app_counts = df["app_proto"].fillna("UNKNOWN").value_counts()
+    print(f"Number of application-layer protocols: {len(app_counts)}")
     app_group = df.groupby("app_proto", dropna=False)
     app_stats = []
 
@@ -85,8 +88,8 @@ def report_task1a_pfcp(df: pd.DataFrame):
     app_stats.sort(key=lambda x: x["count"], reverse=True)
 
     print(
-        "\nHow many and which application-layer protocols exist, "
-        "and what fraction / attack share / attack rate they have:"
+        "\nexisted application-layer protocols , "
+        "and fraction / attack share / attack rate they have:"
     )
     print(
         f"{'App Proto':25s} {'Count':>12s} {'Frac(total)':>12s} "

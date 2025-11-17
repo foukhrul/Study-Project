@@ -59,7 +59,7 @@ def compute_iat_stats(df_subset, desc):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Task 1c (PFCP): Host-pair level & inter-arrival time analysis."
+        description="Host-pair level & inter-arrival time analysis."
     )
     parser.add_argument(
         "--pfcp_root",
@@ -69,13 +69,13 @@ def main():
     args = parser.parse_args()
 
     root = args.pfcp_root
-    print("Task 1c: 5G-PFCP – Host Pair & IAT Analysis")
+    print("5G-PFCP – Host Pair & IAT Analysis")
 
     print(f"Processing 5G-PFCP dataset from: {root}")
     df = load_pfcp_packets(root)
 
     if df is None or df.empty:
-        print("[PFCP-1c] DataFrame is empty, nothing to analyze.")
+        print("DataFrame is empty, nothing to analyze.")
         return
 
     required_cols = {"host_pair", "ts", "app_proto", "is_attack"}

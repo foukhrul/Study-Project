@@ -4,8 +4,8 @@ import subprocess
 
 # --------- CONFIG ---------
 TASKS = [
-    #("task1a_pfcp.py", "task1a_pfcp.txt"),
-    ("task1a_nidd.py", "task1a_nidd.txt"),
+    ("task1a_pfcp.py", "task1a_pfcp.txt"),
+    #("task1a_nidd.py", "task1a_nidd.txt"),
     #("task1b_pfcp.py", "task1b_pfcp.txt"),
     #("task1b_nidd.py", "task1b_nidd.txt"),
     #("task1c_pfcp.py", "task1c_pfcp.txt"),

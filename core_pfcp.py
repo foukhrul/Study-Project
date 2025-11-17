@@ -12,7 +12,7 @@ from collections import defaultdict, Counter
 DEFAULT_PFCP_ROOT = "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP"
 
 
-# ================== SMALL HELPERS ==================
+# int float poriborton
 def _safe_int(x, default=0):
     try:
         return int(str(x).strip())
@@ -26,7 +26,7 @@ def _safe_float(x, default=0.0):
     except Exception:
         return default
 
-
+#
 def normalize_label_pfcp(label):
     """
     PFCP CSV গুলোর label নরমালাইজ করা:
@@ -120,7 +120,7 @@ def build_pfcp_flow_dict(root_folder):
                         missing.append(name)
 
                 if missing:
-                    print(f"[PFCP] Skipping CSV {csv_path}: Missing {', '.join(missing)}")
+                    print(f"Skipping CSV {csv_path}: Missing {', '.join(missing)}")
                     continue
 
                 for _, row in df.iterrows():
@@ -143,10 +143,10 @@ def build_pfcp_flow_dict(root_folder):
                     flow_dict[fid] = label
 
             except Exception as e:
-                print(f"[PFCP] Error in CSV {csv_path}: {e}")
+                print(f"Error in CSV {csv_path}: {e}")
                 continue
 
-    print(f"[PFCP] Flow dictionary size: {len(flow_dict)} flows")
+    print(f"Flow dictionary size: {len(flow_dict)} flows")
     return flow_dict
 
 
@@ -178,7 +178,6 @@ def iter_pfcp_packets(pcap_path, flow_dict):
         if e.stderr:
             print("  --- tshark stderr ---")
             print(e.stderr.strip())
-            print("  ---------------------")
         return
     except subprocess.TimeoutExpired:
         print(f"Timeout reading {pcap_path}")
@@ -261,12 +260,10 @@ def iter_pfcp_packets(pcap_path, flow_dict):
 
 # ================== LOAD WHOLE DATASET INTO DATAFRAME ==================
 def load_pfcp_packets(root_folder=DEFAULT_PFCP_ROOT):
-    """
-    পুরা PFCP dataset থেকে:
+    """ পুরা PFCP dataset থেকে:
       - CSV গুলো থেকে flow_dict বানাবে
       - সব pcap থেকে packet row বের করবে
-      - সব মিলিয়ে একটি pandas DataFrame রিটার্ন করবে
-    """
+      - সব মিলিয়ে একটি pandas DataFrame রিটার্ন করবে """
     flow_dict = build_pfcp_flow_dict(root_folder)
 
     rows = []
@@ -280,7 +277,7 @@ def load_pfcp_packets(root_folder=DEFAULT_PFCP_ROOT):
                 rows.append(row)
 
     if not rows:
-        print("[PFCP] No packets loaded. Check paths & tshark installation / pcap format.")
+        print("No packets loaded. Check paths & tshark installation / pcap format.")
         return pd.DataFrame()
 
     df = pd.DataFrame(rows)
@@ -293,6 +290,6 @@ def load_pfcp_packets(root_folder=DEFAULT_PFCP_ROOT):
     df["is_attack"] = df["is_attack"].astype(bool)
     df["has_app_data"] = df["has_app_data"].astype(bool)
 
-    print(f"[PFCP] Loaded {len(df):,} packets into DataFrame.")
+    print(f"Loaded {len(df):,} packets into DataFrame.")
     return df
 

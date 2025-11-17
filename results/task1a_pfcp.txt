@@ -1,6 +1,6 @@
 Processing 5G-PFCP dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP
-[PFCP] Flow dictionary size: 133 flows
-[PFCP] Loaded 3,081,410 packets into DataFrame.
+Flow dictionary size: 133 flows
+Loaded 3,081,410 packets into DataFrame.
 
 ============================================================
 Task 1a – 5G-PFCP: Basic Traffic & Protocol Statistics
@@ -18,8 +18,9 @@ Total packets in PFCP dataset: 3,081,410
   Fraction of host pairs with attacks: 17.78%
 
 [Application-layer protocols]
+Number of application-layer protocols: 20
 
-How many and which application-layer protocols exist, and what fraction / attack share / attack rate they have:
+existed application-layer protocols , and fraction / attack share / attack rate they have:
 App Proto                        Count  Frac(total)   AtkCount   AtkShare    AtkRate
 PFCP                         2,171,221       70.46%    792,688     92.73%     36.51%
 TCP                            453,412       14.71%     61,663      7.21%     13.60%

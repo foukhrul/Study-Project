@@ -1,208 +1,172 @@
-"""
-Task 1d (5G-NIDD) – CCDFs for header length & application payload length
-
-Plots *complementary* CDFs (CCDF = P(X >= x)) for:
-  - header_len (bytes) per application-layer protocol
-  - app_len    (bytes) per application-layer protocol
-in two scenarios:
-  - WITH attacks   (is_attack == 1)
-  - WITHOUT attacks (is_attack == 0)
-শর্ত: CCDF হিসাব করতে কোনো ready-made library ব্যবহার করা যাবে না,
-মানে নিজে sort + counting দিয়ে কম্পিউট করতে হবে। এখানে ঠিক সেটাই করছি। """
-
+#!/usr/bin/env python3
+import os
 import argparse
-from typing import Tuple, Optional
-
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 from core_nidd import load_nidd_packets, DEFAULT_NIDD_ROOT
 
-# ---------- small helpers ----------
 
-def compute_ccdf(values: pd.Series) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-    """ values: 1D Series of non-negative lengths (header_len বা app_len)
-    Returns:
-        x: sorted unique values
-        ccdf: P(X >= x) for each x
-    কোনো external CCDF library ব্যবহার করছি না:
-      1) values sort করি
-      2) unique value + count বের করি
-      3) reverse cumulative count করে ভাগ করি total দিয়ে """
-    arr = values.dropna().to_numpy(dtype=float)
-    if arr.size == 0:
-        return None
+def compute_ccdf(values):
+    """
+    Manual CCDF computation.
+    Input:  iterable/array of numeric values
+    Output: (xs, ys) where ys[i] = P(X >= xs[i])
+    """
+    vals = sorted(values)
+    n = len(vals)
+    xs, ys = [], []
 
-    # non-negative only (length)
-    arr = arr[arr >= 0]
-    if arr.size == 0:
-        return None
+    if n == 0:
+        return xs, ys
 
-    # sort ascending
-    arr.sort()
+    prev = None
+    for i, v in enumerate(vals):
+        if v != prev:
+            ccdf = (n - i) / n
+            xs.append(v)
+            ys.append(ccdf)
+            prev = v
 
-    # unique value + frequency
-    uniq, counts = np.unique(arr, return_counts=True)
-
-    # cumulative count from right: for CCDF P(X >= x)
-    # উদাহরণ: counts = [c0, c1, c2]
-    # cum_rev = [c0+c1+c2, c1+c2, c2]
-    cum_rev = counts[::-1].cumsum()[::-1]
-
-    ccdf = cum_rev / float(arr.size)
-
-    return uniq, ccdf
+    return xs, ys
 
 
-def plot_ccdf_for_metric(
-    df: pd.DataFrame,
-    metric_col: str,
-    title_prefix: str,
-    outfile_prefix: str,
-    top_k_app: int = 5,
-) -> None:
-    """ metric_col: "header_len" অথবা "app_len"
-    title_prefix: প্লটের টাইটেলে prefix হিসেবে use হবে
-    outfile_prefix: output ফাইলের নামের prefix (e.g. "nidd_header" / "nidd_payload")
-    top_k_app: সবচেয়ে বেশি frequent application protocols এর মধ্যে কতটা show করব """
+def safe_name(proto):
+    """Make protocol name safe for filenames."""
+    return "".join(ch if ch.isalnum() else "_" for ch in proto) or "UNKNOWN"
 
-    if metric_col not in df.columns:
-        print(f"[1d] Column '{metric_col}' not found in DataFrame, skipping.")
+
+def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag):
+    """
+    metric_col       : 'header_len' or 'app_len'
+    metric_label     : nice name for axis/filename
+    with_attack_flag : True => only Attack packets, False => Normal+Unlabeled
+    """
+    if with_attack_flag:
+        subset = df[df["is_attack"] == True].copy()
+        tag = "with_attack"
+        title_tag = "with attacks"
+    else:
+        subset = df[df["is_attack"] == False].copy()
+        tag = "without_attack"
+        title_tag = "without attacks"
+
+    # শুধু positive length + NaN বাদ
+    series = subset[[metric_col, "app_proto"]].dropna()
+    series = series[series[metric_col] > 0]
+
+    if series.empty:
+        print(f"[NIDD-1d] No data for {metric_label} ({title_tag})")
         return
 
-    # Clean basic
-    df = df.copy()
-    df["app_proto"] = df["app_proto"].fillna("UNKNOWN").astype(str)
-    df["is_attack"] = df["is_attack"].astype(bool)
+    protocols = sorted(series["app_proto"].unique())
 
-    # WITH attacks / WITHOUT attacks
-    subsets = {
-        "with_attacks":  df[df["is_attack"]],
-        "without_attacks": df[~df["is_attack"]],
-    }
+    print(
+        f"[NIDD-1d] Plotting {metric_label} CCDFs {title_tag} "
+        f"for {len(protocols)} app protocols..."
+    )
 
-    for mode, sub in subsets.items():
-        if sub.empty:
-            print(f"[1d] Subset '{mode}' empty for metric '{metric_col}', skipping plot.")
+    for proto in protocols:
+        vals = series.loc[series["app_proto"] == proto, metric_col].tolist()
+        if len(vals) < 2:
+            # sample খুব কম হলে CCDF তেমন অর্থপূর্ণ না
             continue
 
-        # সবচেয়ে বেশি packet থাকা app_proto থেকে top_k_app বেছে নিই
-        app_counts = sub["app_proto"].value_counts()
-        top_apps = list(app_counts.head(top_k_app).index)
+        xs, ys = compute_ccdf(vals)
+        if not xs:
+            continue
 
-        print(f"[1d] {metric_col} – {mode}: plotting top {len(top_apps)} app_proto:", top_apps)
+        plt.figure()
+        plt.step(xs, ys, where="post")
 
-        plt.figure(figsize=(8, 5))
-        ax = plt.gca()
+        plt.xlabel(f"{metric_label} (bytes)")
+        plt.ylabel("P(X ≥ x)")
+        plt.title(
+            f"5G-NIDD {metric_label} CCDF ({title_tag})\n"
+            f"Application protocol: {proto}"
+        )
+        plt.grid(True, which="both", linestyle="--", alpha=0.5)
+        plt.xscale("log")  # length range বড়, log-scale এ ভালো দেখা যায়
 
-        for app in top_apps:
-            vals = sub.loc[sub["app_proto"] == app, metric_col]
-            ccdf_data = compute_ccdf(vals)
-            if ccdf_data is None:
-                continue
-
-            x, ccdf = ccdf_data
-            # log-x scale useful for length distributions
-            ax.step(x, ccdf, where="post", label=app)
-
-        ax.set_xscale("log")
-        ax.set_xlabel(f"{metric_col} (bytes)")
-        ax.set_ylabel("CCDF  P(X ≥ x)")
-        ax.set_ylim(0.0, 1.0)
-        ax.set_title(f"{title_prefix} – {mode.replace('_', ' ').title()}")
-
-        ax.grid(True, which="both", linestyle="--", alpha=0.4)
-        ax.legend(loc="best", fontsize=8)
-
-        outfile = f"{outfile_prefix}_{metric_col}_{mode}.png"
+        fname = f"nidd_ccdf_{metric_col}_{tag}_{safe_name(proto)}.png"
+        out_path = os.path.join(out_dir, fname)
         plt.tight_layout()
-        plt.savefig(outfile, dpi=200)
-        print(f"[1d] Saved plot: {outfile}")
-
-        # চাইলে plt.show() দিতে পারো; report বানানোর সময় সাধারণত শুধু save করাই যথেষ্ট
+        plt.savefig(out_path, dpi=200)
         plt.close()
 
+        print(f"  -> saved: {out_path}")
 
-# ---------- main analysis ----------
 
-def analyze_1d_nidd(df: pd.DataFrame) -> None:
-    """
-    Main driver for Task 1d – 5G-NIDD
-    """
+def main():
+    parser = argparse.ArgumentParser(
+        description="Task 1d (NIDD): CCDF of header and payload length per app protocol."
+    )
+    parser.add_argument(
+        "--nidd_root",
+        default=DEFAULT_NIDD_ROOT,
+        help="Root folder containing 5G-NIDD CSV/PCAP files",
+    )
+    parser.add_argument(
+        "--out_dir",
+        default="nidd_task1d_plots",
+        help="Output directory for CCDF plots",
+    )
+    args = parser.parse_args()
+
+    root = args.nidd_root
+    out_dir = args.out_dir
+    os.makedirs(out_dir, exist_ok=True)
+
+    print(f"Processing 5G-NIDD dataset from: {root}")
+    df = load_nidd_packets(root)
 
     if df is None or df.empty:
         print("[NIDD-1d] DataFrame is empty, nothing to analyze.")
         return
 
-    required = {"app_proto", "is_attack", "header_len", "app_len"}
-    missing = required - set(df.columns)
+    required_cols = {"header_len", "app_len", "app_proto", "is_attack"}
+    missing = required_cols - set(df.columns)
     if missing:
-        print(f"[NIDD-1d] Missing columns {missing} in DataFrame.")
-        print("Ensure core_nidd.py creates 'header_len' and 'app_len' like in PFCP core.")
+        print(f"[NIDD-1d] Missing columns in DataFrame: {missing}")
+        print("Check core_nidd.py to ensure these fields are created.")
         return
 
-    print(f"[NIDD-1d] Total packets in DataFrame: {len(df):,}")
+    print(f"[NIDD-1d] Loaded {len(df):,} packets into DataFrame for CCDF computation.")
 
-    # শুধু positive length এর উপর কাজ করব
-    df = df[(df["header_len"] >= 0) & (df["app_len"] >= 0)].copy()
-    print(f"[NIDD-1d] Packets with valid header/app lengths: {len(df):,}")
-
-    # Header length CCDFs
+    # 1) Header length CCDF (with & without attacks)
     plot_ccdf_for_metric(
-        df,
+        df=df,
         metric_col="header_len",
-        title_prefix="5G-NIDD Header Length CCDF by App Protocol",
-        outfile_prefix="nidd_header",
-        top_k_app=5,   # চাইলে বাড়াতে/কমাতে পারো
+        metric_label="Header length",
+        out_dir=out_dir,
+        with_attack_flag=True,
     )
-
-    # App payload length CCDFs
     plot_ccdf_for_metric(
-        df,
+        df=df,
+        metric_col="header_len",
+        metric_label="Header length",
+        out_dir=out_dir,
+        with_attack_flag=False,
+    )
+
+    # 2) Application payload length CCDF (with & without attacks)
+    plot_ccdf_for_metric(
+        df=df,
         metric_col="app_len",
-        title_prefix="5G-NIDD App Payload Length CCDF by App Protocol",
-        outfile_prefix="nidd_payload",
-        top_k_app=5,
+        metric_label="Application payload length",
+        out_dir=out_dir,
+        with_attack_flag=True,
+    )
+    plot_ccdf_for_metric(
+        df=df,
+        metric_col="app_len",
+        metric_label="Application payload length",
+        out_dir=out_dir,
+        with_attack_flag=False,
     )
 
-    print("End of Task 1d (5G-NIDD CCDFs)")
+    print("Task 1d (NIDD) CCDF plots generated.")
+    print(f"Plots saved in folder: {os.path.abspath(out_dir)}")
 
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Task 1d (5G-NIDD): CCDFs of header & payload length per app protocol."
-    )
-    parser.add_argument(
-        "-r",
-        "--root",
-        default=DEFAULT_NIDD_ROOT,
-        help="Path to 5G-NIDD root folder (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--max-rows-csv",
-        type=int,
-        default=0,
-        help="Max rows per CSV when building flow_dict (0 = full, default: %(default)s)",
-    )
-    parser.add_argument(
-        "--max-pkts-pcap",
-        type=int,
-        default=None,
-        help="Max packets per pcap (for quick testing; default: all)",
-    )
-
-    args = parser.parse_args()
-
-    print(f"Processing 5G-NIDD dataset from: {args.root}")
-
-    df = load_nidd_packets(
-        root=args.root,
-        max_rows_per_csv=args.max_rows_csv if args.max_rows_csv > 0 else None,
-        max_packets_per_pcap=args.max_pkts_pcap,
-    )
-
-    analyze_1d_nidd(df)
 
 if __name__ == "__main__":
     main()
