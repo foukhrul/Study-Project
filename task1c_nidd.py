@@ -1,26 +1,11 @@
-#!/usr/bin/env python3
-"""How many pairs of hosts are in the dataset?
-- For how many of these pairs are there packets with attacks?
-- Inter-arrival time (IAT) statistics between consecutive packets
-  that are:
-    * exchanged between the SAME pair of hosts
-    * transmitted over the SAME application-layer protocol type
-  separately:
-    * WITHOUT attacks (only non-attack packets)
-    * WITH attacks (only attack packets)
-IAT stats reported: count, mean, standard deviation, median """
-
-import argparse
 import pandas as pd
 
 from core_nidd import load_nidd_packets, DEFAULT_NIDD_ROOT
-
 
 def print_header(title: str) -> None:
     print("\n" + "=" * 40)
     print(title)
     print("=" * 40)
-
 
 def host_pair_stats(df: pd.DataFrame) -> None:
     """ Compute: total number of unordered host pairs
@@ -53,12 +38,10 @@ def host_pair_stats(df: pd.DataFrame) -> None:
 
 
 def iat_stats_by_hostpair_app(df: pd.DataFrame, title: str) -> None:
-    """ Inter-arrival time stats between consecutive packets that:
-      - belong to the same unordered host pair
-      - have the same application-layer protocol (app_proto)
-    df: subset of packets (either only non-attack or only attack)
-        must contain columns: src_ip, dst_ip, app_proto, ts """
-
+    """Inter-arrival stats between consecutive packets
+       with same unordered host_pair and app_proto.
+       df: packets (all attack or all non-attack),
+           must have src_ip, dst_ip, app_proto, ts. """
     required = {"src_ip", "dst_ip", "app_proto", "ts"}
     missing = required - set(df.columns)
     if missing:
@@ -87,8 +70,7 @@ def iat_stats_by_hostpair_app(df: pd.DataFrame, title: str) -> None:
         .diff()
         .dropna()
     )
-
-    # নিরাপত্তার জন্য negative interval বাদ দেই (ঘড়ি / ordering সমস্যা থাকলে)
+    # excluude negative interval for safety if problem in ordering
     iats = iats[iats >= 0]
 
     if iats.empty:
@@ -107,28 +89,17 @@ def iat_stats_by_hostpair_app(df: pd.DataFrame, title: str) -> None:
     print()
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Task 1c (5G-NIDD): host-pair count and IAT statistics."
-    )
-    parser.add_argument(
-        "--root",
-        default=DEFAULT_NIDD_ROOT,
-        help="Path to 5G-NIDD root folder (default: %(default)s)",
-    )
+def main():
+    root = DEFAULT_NIDD_ROOT
+    print(f"Processing 5G-NIDD dataset from: {root}")
 
-    args = parser.parse_args()
+    # Load full dataset (CSV + PCAP merged)
+    df = load_nidd_packets(root=root)
 
-    print(f"Processing 5G-NIDD dataset from: {args.root}")
-
-    # Full dataset; no row/packet limits from here
-    df = load_nidd_packets(root=args.root)
-
-    if df is None or df.empty:
+    if df.empty:
         print("DataFrame is empty, nothing to analyze.")
         return
 
-    # Basic cleaning
     df = df.copy()
     df["is_attack"] = df["is_attack"].astype(bool)
     df["app_proto"] = df["app_proto"].fillna("UNKNOWN")
@@ -153,7 +124,6 @@ def main() -> None:
     )
 
     print("End of Task 1c (5G-NIDD)")
-
 
 if __name__ == "__main__":
     main()

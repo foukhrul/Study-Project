@@ -1,13 +1,6 @@
-"""Packet length stats per application protocol
-- Inter-arrival time (IAT) stats, comparing
-  * packets WITH attacks
-  * packets WITHOUT attacks """
-
-import argparse
 import pandas as pd
 
 from core_nidd import load_nidd_packets, DEFAULT_NIDD_ROOT
-
 
 def length_stats_by_app(df: pd.DataFrame, title: str) -> None:
     """Per-application protocol packet length statistics."""
@@ -61,39 +54,15 @@ def iat_stats(df: pd.DataFrame, title: str) -> None:
     print(f"  median: {iats.median():.6f}  seconds")
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Task 1b (5G-NIDD): packet length and inter-arrival time statistics."
-    )
-    parser.add_argument(
-        "--root",
-        default=DEFAULT_NIDD_ROOT,
-        help="Root folder containing 5G-NIDD CSV/PCAP files "
-             "(default: 5G_NIDD next to Code/)",
-    )
-    args = parser.parse_args()
+def main():
+    # Fixed root path from core_nidd
+    root = DEFAULT_NIDD_ROOT
+    print(f"Processing 5G-NIDD dataset from: {root}")
 
-    print(f"Processing 5G-NIDD dataset from: {args.root}")
-
-    # full dataset: no max_rows / max_pkts limit
-    df = load_nidd_packets(root=args.root)
-
-    if df is None or df.empty:
+    # allways use full dataset, no max-row / max-packet limit
+    df = load_nidd_packets(root=root)
+    if df.empty:
         print("DataFrame is empty, nothing to analyze.")
-        return
-
-    required_cols = {
-        "ts",
-        "pkt_len",
-        "app_proto",
-        "is_attack",
-        "src_ip",
-        "dst_ip",
-    }
-    missing = required_cols - set(df.columns)
-    if missing:
-        print(f"Missing required columns in DataFrame: {missing}")
-        print("Check core_nidd.py to ensure these fields are created.")
         return
 
     # remove non-positive lengths

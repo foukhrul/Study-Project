@@ -1,14 +1,11 @@
-#!/usr/bin/env python3
 import os
 import argparse
 import matplotlib.pyplot as plt
 
 from core_nidd import load_nidd_packets, DEFAULT_NIDD_ROOT
 
-
 def compute_ccdf(values):
-    """
-    Manual CCDF computation.
+    """  Manual CCDF computation.
     Input:  iterable/array of numeric values
     Output: (xs, ys) where ys[i] = P(X >= xs[i])
     """
@@ -28,7 +25,6 @@ def compute_ccdf(values):
             prev = v
 
     return xs, ys
-
 
 def safe_name(proto):
     """Make protocol name safe for filenames."""
@@ -50,7 +46,7 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
         tag = "without_attack"
         title_tag = "without attacks"
 
-    # শুধু positive length + NaN বাদ
+    # only exclude positive length + NaN
     series = subset[[metric_col, "app_proto"]].dropna()
     series = series[series[metric_col] > 0]
 
@@ -68,7 +64,7 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
     for proto in protocols:
         vals = series.loc[series["app_proto"] == proto, metric_col].tolist()
         if len(vals) < 2:
-            # sample খুব কম হলে CCDF তেমন অর্থপূর্ণ না
+            # if less sample ccdf meaningless
             continue
 
         xs, ys = compute_ccdf(vals)
@@ -97,40 +93,27 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Task 1d (NIDD): CCDF of header and payload length per app protocol."
-    )
-    parser.add_argument(
-        "--nidd_root",
-        default=DEFAULT_NIDD_ROOT,
-        help="Root folder containing 5G-NIDD CSV/PCAP files",
-    )
-    parser.add_argument(
-        "--out_dir",
-        default="nidd_task1d_plots",
-        help="Output directory for CCDF plots",
-    )
-    args = parser.parse_args()
-
-    root = args.nidd_root
-    out_dir = args.out_dir
+    root = DEFAULT_NIDD_ROOT
+    out_dir = "nidd_task1d_plots"
     os.makedirs(out_dir, exist_ok=True)
 
     print(f"Processing 5G-NIDD dataset from: {root}")
+
+    # Load merged dataset (CSV + PCAP)
     df = load_nidd_packets(root)
 
     if df is None or df.empty:
-        print("[NIDD-1d] DataFrame is empty, nothing to analyze.")
+        print("DataFrame is empty, nothing to analyze.")
         return
 
+    # Check required fields exist
     required_cols = {"header_len", "app_len", "app_proto", "is_attack"}
     missing = required_cols - set(df.columns)
     if missing:
-        print(f"[NIDD-1d] Missing columns in DataFrame: {missing}")
-        print("Check core_nidd.py to ensure these fields are created.")
+        print(f"Missing columns in DataFrame: {missing}")
         return
 
-    print(f"[NIDD-1d] Loaded {len(df):,} packets into DataFrame for CCDF computation.")
+    print(f"Loaded {len(df):,} packets for CCDF computation.")
 
     # 1) Header length CCDF (with & without attacks)
     plot_ccdf_for_metric(
@@ -166,7 +149,6 @@ def main():
 
     print("Task 1d (NIDD) CCDF plots generated.")
     print(f"Plots saved in folder: {os.path.abspath(out_dir)}")
-
 
 if __name__ == "__main__":
     main()

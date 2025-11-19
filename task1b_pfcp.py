@@ -1,33 +1,10 @@
-#!/usr/bin/env python3
-"""
-1) Only packets that contain application data (has_app_data == True):
-
-   For EACH application-layer protocol (app_proto) and for EACH of:
-     • packets WITH attacks (is_attack == True)
-     • packets WITHOUT attacks (is_attack == False; i.e., Normal + Unlabeled)
-   -> compute: average total packet length (bytes)
-        - standard deviation of packet length (bytes)
-        - median packet length (bytes)
-
-2) For ALL packets (no has_app_data filter): For EACH of: packets WITH attacks. packets WITHOUT attacks
-   considering only packets that are exchanged between the same pair of hosts (same host_pair, irrespective of direction):
-
-   -> compute: average inter-arrival time between two consecutive packets (seconds)
-        - standard deviation of inter-arrival time (seconds), median inter-arrival time (seconds)
-"""
-
-import argparse
-import numpy as np
 import pandas as pd
 
 from core_pfcp import load_pfcp_packets, DEFAULT_PFCP_ROOT
 
 
 def length_stats_by_app_proto(df: pd.DataFrame, title: str) -> None:
-    """
-    df: subset where has_app_data == True and is_attack is fixed (True/False).
-    Computes count, mean, std, median of pkt_len per app_proto.
-    """
+
     if df.empty:
         print(f"\n[Packet length stats] {title}")
         print("  (no packets in this subset)")
@@ -47,11 +24,8 @@ def length_stats_by_app_proto(df: pd.DataFrame, title: str) -> None:
 
 
 def iat_stats_by_host_pair(df: pd.DataFrame, title: str) -> None:
-    """
-    Compute inter-arrival times between consecutive packets that belong to the
-    same host_pair (unordered src/dst), then aggregate all intervals globally.
-    df: subset where is_attack is fixed (True/False).
-    """
+    """ Compute inter-arrival times between consecutive packets that belong to the
+    same host_pair (unordered src/dst), then aggregate all intervals globally.."""
     if df.empty:
         print(f"\n[Inter-arrival stats] {title}")
         print("  (no packets in this subset)")
@@ -86,41 +60,27 @@ def iat_stats_by_host_pair(df: pd.DataFrame, title: str) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Task 1b (5G-PFCP): "
-                    "packet length & inter-arrival time statistics."
-    )
-    parser.add_argument(
-        "--pfcp_root",
-        default=DEFAULT_PFCP_ROOT,
-        help="Root folder containing 5G-PFCP PCAP files",
-    )
-    args = parser.parse_args()
-
-    root = args.pfcp_root
+    root = DEFAULT_PFCP_ROOT
     print(f"Processing 5G-PFCP dataset from: {root}")
 
+    # Load PFCP packets
     df = load_pfcp_packets(root)
 
-    if df is None or df.empty:
-        print("[PFCP-1b] DataFrame is empty, nothing to analyze.")
-        return
-
+    # Required fields must be present
     required_cols = {
         "pkt_len",       # total packet length (frame.len)
         "app_proto",     # application-layer protocol
         "is_attack",     # True / False
-        "has_app_data",  # True if there is application-layer payload
-        "ts",            # timestamp (frame.time_epoch)
-        "host_pair",     # unordered pair of hosts (from core_pfcp)
+        "has_app_data",  # True if PFCP has application payload
+        "ts",            # timestamp
+        "host_pair",     # unordered src-dst pair
     }
     missing = required_cols - set(df.columns)
     if missing:
         print(f"[PFCP-1b] Missing required columns: {missing}")
-        print("Check core_pfcp.py to ensure these fields are created.")
         return
 
-    print(f"[PFCP-1b] Loaded {len(df):,} packets into DataFrame.")
+    print(f"Loaded {len(df):,} packets into DataFrame.")
 
     # 1) Packet length statistics (only packets with app data)
     #    for each app_proto, with & without attacks

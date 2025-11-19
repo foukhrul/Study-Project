@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 import sys
 import subprocess
@@ -6,15 +5,10 @@ from typing import Dict, Any, Tuple, Optional, List
 
 import pandas as pd
 
-# ----- Default NIDD root (Code/ থেকে এক লেভেল উপরে গিয়ে 5G_NIDD) -----
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_NIDD_ROOT = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "5G_NIDD"))
 
-# ==========================
 # Protocol / Port helpers
-# ==========================
-
-# প্রোটোকল নাম → নম্বর (IPv4 proto field এর মত)
 PROTO_MAP = {
     "icmp": 1,
     "tcp": 6,
@@ -24,7 +18,6 @@ PROTO_MAP = {
     "other": 0,
 }
 
-# কিছু common service name → port নম্বর
 PORT_NAME_MAP = {
     "http": 80,
     "https": 443,
@@ -43,12 +36,10 @@ def _safe_int(x, default: int = 0) -> int:
 
 
 def convert_port(val) -> int:
-    """
-    CSV থেকে আসা port value কে int-এ convert করে:
+    """ CSV থেকে আসা port value কে int-এ convert করে:
       - '443'    -> 443
       - 'https'  -> 443
-      - '0x0016' -> 22
-    """
+      - '0x0016' -> 22 """
     if pd.isna(val):
         return 0
     s = str(val).strip()
@@ -81,10 +72,7 @@ def canon_flow_key(
     dport: int,
     proto_num: int,
 ) -> Tuple[str, str, int, int, int]:
-    """
-    Symmetric 5-tuple: (ip1, ip2, p1, p2, proto)
-    যে direction-ই হোক, একই flow একই key পাবে।
-    """
+    """ Symmetric 5-tuple: (ip1, ip2, p1, p2, proto) same key same flow for any direction """
     src_ip = str(src_ip)
     dst_ip = str(dst_ip)
     sport = int(sport)
@@ -103,21 +91,14 @@ def canon_flow_key(
 
 # CSV → flow_dict (labels)
 
-def build_nidd_flow_dict_from_csvs(
-    folder: str,
-    max_rows_per_file: Optional[int] = None,
-    verbose: bool = False,
-) -> Dict[Tuple[str, str, int, int, int], Dict[str, Any]]:
+def build_nidd_flow_dict_from_csvs(folder: str) \
+        -> Dict[Tuple[str, str, int, int, int], Dict[str, Any]]:
 
-    """ 5G-NIDD CSV ফাইলগুলো থেকে flow_dict বানায়। key: (ip1, ip2, p1, p2, proto_num)  # symmetric
-    val:{
+    """ flow_dict from csv # symmetric val:{
           "label": "Normal"/"Attack"/"Unlabeled",
           "is_attack": bool,
           "attack_type": str,
-          "src_file": "Goldeneye1.csv", ...
-        }
-    এখানে আমরা মূলত BS1_each_attack_csv / BS2_each_attack_csv use করব।
-    BTS_1 / BTS_2 / Combined / Encoded / *argus* নামের CSV গুলো ignore করা হবে।"""
+          "src_file": "Goldeneye1.csv", ...} """
 
     flow_dict: Dict[Tuple[str, str, int, int, int], Dict[str, Any]] = {}
 
@@ -128,7 +109,7 @@ def build_nidd_flow_dict_from_csvs(
 
             fname_low = f.lower()
 
-            # aggregated / encoded / argus CSV গুলো বাদ
+            # aggregated / encoded / argus CSV excluded
             if (
                 "bts_1.csv" in fname_low
                 or "bts_2.csv" in fname_low
@@ -136,7 +117,7 @@ def build_nidd_flow_dict_from_csvs(
                 or "encoded.csv" in fname_low
                 or "argus" in fname_low
             ):
-                # output clean রাখার জন্য এখানে কিছু print করিনি
+                # no print to keep output clean
                 continue
 
             csv_path = os.path.join(root, f)
@@ -145,20 +126,16 @@ def build_nidd_flow_dict_from_csvs(
                 df = pd.read_csv(
                     csv_path,
                     low_memory=False,
-                    nrows=max_rows_per_file if max_rows_per_file and max_rows_per_file > 0 else None,
                 )
             except Exception as e:
-                if verbose:
-                    print(f"Error reading CSV {csv_path}: {e}")
                 continue
 
-            # সব column lower-case
+            # all column lower case
             df.columns = df.columns.str.strip().str.lower()
 
-            # required columns (BS1_each_attack_csv / BS2_each_attack_csv structure অনুযায়ী)
             required_base = ["srcaddr", "dstaddr", "sport", "dport", "proto"]
 
-            # label column খোঁজা
+            # to find label column
             label_col = None
             if "label" in df.columns:
                 label_col = "label"
@@ -171,8 +148,6 @@ def build_nidd_flow_dict_from_csvs(
             missing = [c for c in required if c not in df.columns]
 
             if missing:
-                if verbose:
-                    print(f"Skipping {csv_path}: missing {missing}")
                 continue
 
             for _, row in df.iterrows():
@@ -219,13 +194,10 @@ def build_nidd_flow_dict_from_csvs(
 def iter_nidd_packets(
     pcap_path: str,
     flow_dict: Optional[Dict[Tuple[str, str, int, int, int], Dict[str, Any]]] = None,
-    max_packets: Optional[int] = None,
 ):
-    """
-    এক একটা packet থেকে তথ্য বের করে dict আকারে yield করে।
-    আপাতত outer ip.src / ip.dst + TCP/UDP/SCTP ports + ip.proto ব্যবহার করছি,
-    সাথে tcp.len / udp.length / data.len থেকে app_len/header_len বের করছি।
-    """
+    """ yield as dict from each packet
+   use outer ip.src / ip.dst + TCP/UDP/SCTP ports + ip.proto,
+  and find tcp.len / udp.length / data.len থেকে app_len/header_len """
 
     cmd: List[str] = [
         "tshark", "-r", pcap_path, "-T", "fields",
@@ -275,8 +247,6 @@ def iter_nidd_packets(
             continue
 
         total += 1
-        if max_packets is not None and total > max_packets:
-            break
 
         parts = line.split("\t")
         if len(parts) < 12:
@@ -404,39 +374,15 @@ def iter_nidd_packets(
     ret = proc.wait()
     stderr = proc.stderr.read().strip()
 
-    # debug করার দরকার হলে uncomment:
-    # sys.stderr.write(
-    #     f"iter_nidd_packets: pcap={filename}, "
-    #     f"total={total}, matched={matched}, exit={ret}\n"
-    # )
-
-    if ret != 0 and stderr:
-        sys.stderr.write(
-            f"tshark stderr for {filename}:\n{stderr}\n"
-        )
-
 # High-level loader: CSV + PCAP → DataFrame
 
-def load_nidd_packets(
-    root: str,
-    max_rows_per_csv: Optional[int] = None,
-    max_packets_per_pcap: Optional[int] = None,
-) -> pd.DataFrame:
-    """
-    5G-NIDD root থেকে:
-      1) সব CSV পড়ে flow_dict বানায়
-      2) সব pcap/pcapng থেকে packet পড়ে label assign করে
-      3) সব মিলিয়ে pandas DataFrame return দেয়
-    """
+def load_nidd_packets(root: str) -> pd.DataFrame:
+    """ read csv make flow_dict, read pcap/pcapng and assign label then return pd df """
     root = os.path.abspath(root)
     print(f"NIDD root: {root}")
 
     # 1) CSV → flow_dict
-    flow_dict = build_nidd_flow_dict_from_csvs(
-        root,
-        max_rows_per_file=max_rows_per_csv,
-        verbose=False,   # skip message গুলো output-এ দেখাবো না
-    )
+    flow_dict = build_nidd_flow_dict_from_csvs(root)
 
     # 2) pcap list
     pcap_files: List[str] = []
@@ -448,11 +394,7 @@ def load_nidd_packets(
 
     rows: List[Dict[str, Any]] = []
     for p in pcap_files:
-        for pkt in iter_nidd_packets(
-            p,
-            flow_dict=flow_dict,
-            max_packets=max_packets_per_pcap,
-        ):
+        for pkt in iter_nidd_packets( p, flow_dict=flow_dict):
             rows.append(pkt)
 
     if not rows:

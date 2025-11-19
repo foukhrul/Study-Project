@@ -1,15 +1,12 @@
-#!/usr/bin/env python3
 import argparse
 import numpy as np
 
 from core_pfcp import load_pfcp_packets, DEFAULT_PFCP_ROOT
 
 def compute_iat_stats(df_subset, desc):
-    """
-    df_subset: DataFrame already filtered (e.g. only attacks / only non-attacks)
+    """df_subset: DataFrame already filtered (e.g. only attacks / only non-attacks)
     Condition: same host_pair + same app_proto
-    Returns: dict with mean, std, median, count
-    """
+    Returns: dict with mean, std, median, count """
     if df_subset.empty:
         print(f"[Task 1c – IAT stats] {desc}: no packets in subset.")
         return {"mean": np.nan, "std": np.nan, "median": np.nan, "count": 0}
@@ -58,20 +55,10 @@ def compute_iat_stats(df_subset, desc):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Host-pair level & inter-arrival time analysis."
-    )
-    parser.add_argument(
-        "--pfcp_root",
-        default=DEFAULT_PFCP_ROOT,
-        help="Root folder containing 5G-PFCP PCAP files",
-    )
-    args = parser.parse_args()
-
-    root = args.pfcp_root
+    root = DEFAULT_PFCP_ROOT
     print("5G-PFCP – Host Pair & IAT Analysis")
-
     print(f"Processing 5G-PFCP dataset from: {root}")
+
     df = load_pfcp_packets(root)
 
     if df is None or df.empty:

@@ -1,22 +1,13 @@
-"""
-- load_nidd_packets() দিয়ে CSV + PCAP থেকে merged DataFrame বানায়
-- Basic stats print করে"""
-import argparse
 import pandas as pd
-
 from core_nidd import load_nidd_packets, DEFAULT_NIDD_ROOT
-
 
 def print_header(title: str):
     print("\n" + "=" * 40)
     print(title)
     print("=" * 40)
 
-
 def analyze_nidd(df: pd.DataFrame):
-    """ df: load_nidd_packets() থেকে পাওয়া DataFrame
-
-    expected columns:
+    """ df from load_nidd_packets() expected columns:
       - label ("Normal"/"Attack"/"Unlabeled")
       - is_attack (0/1 or bool)
       - transport (TCP/UDP/ICMP/SCTP/OTHER)
@@ -28,7 +19,7 @@ def analyze_nidd(df: pd.DataFrame):
 
     print_header("Task 1a: 5G-NIDD Analysis")
 
-    # ---------- মোট প্যাকেট + label split ----------
+    # ---------- total packet + label split ----------
     total = len(df)
     labels = df["label"].fillna("Unlabeled")
 
@@ -70,7 +61,7 @@ def analyze_nidd(df: pd.DataFrame):
     app = df["app_proto"].fillna("UNKNOWN")
     is_attack = df["is_attack"].astype(bool)
 
-    # কতগুলো different app-layer protocol আছে
+    # how many different app-layer protocol existed
     app_counts = app.value_counts()
     print(f"Number of application-layer protocols: {len(app_counts)}")
 
@@ -81,12 +72,12 @@ def analyze_nidd(df: pd.DataFrame):
         attacks_this_proto = (mask_proto & is_attack).sum()
 
         if total_attacks > 0:
-            # সব attack প্যাকেটের মধ্যে এই প্রোটোকলের share
+            # share of this protocol from all attack packet
             attack_share = 100.0 * attacks_this_proto / total_attacks
         else:
             attack_share = 0.0
 
-        # ওই প্রোটোকলের মধ্যে attack rate
+        # attack rate in that protocol
         attack_rate = 100.0 * attacks_this_proto / cnt if cnt > 0 else 0.0
 
         print(
@@ -140,31 +131,9 @@ def analyze_nidd(df: pd.DataFrame):
 
     print("\nEnd of Task 1a (5G-NIDD)")
 
-
 def main():
-    parser = argparse.ArgumentParser(
-        description="Task 1a: 5G-NIDD dataset analysis",
-    )
-    parser.add_argument(
-        "-r",
-        "--root",
-        default=DEFAULT_NIDD_ROOT,
-        help="Path to 5G-NIDD root folder (default: %(default)s)",
-    )
-
-    args = parser.parse_args()
-
-    print(f"Processing 5G-NIDD dataset from: {args.root}")
-
-    # সবসময় full dataset ব্যবহার করছি, কোনো max-row / max-packet limit নেই
-    df = load_nidd_packets(root=args.root)
-
-    if df.empty:
-        print("DataFrame is empty, nothing to analyze.")
-        return
-
+    df = load_nidd_packets(root=DEFAULT_NIDD_ROOT)
     analyze_nidd(df)
-
 
 if __name__ == "__main__":
     main()

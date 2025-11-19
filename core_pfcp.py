@@ -1,18 +1,12 @@
-#!/usr/bin/env python3
 import os
 import ipaddress
 import subprocess
-import argparse
 
 import pandas as pd
 
-from collections import defaultdict, Counter
-
-# ================== PATH (change default as needed) ==================
 DEFAULT_PFCP_ROOT = "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP"
 
-
-# int float poriborton
+# helper
 def _safe_int(x, default=0):
     try:
         return int(str(x).strip())
@@ -26,26 +20,20 @@ def _safe_float(x, default=0.0):
     except Exception:
         return default
 
-#
+# to normalize csv label
 def normalize_label_pfcp(label):
-    """
-    PFCP CSV গুলোর label নরমালাইজ করা:
-      - 'normal' => 'Normal'
-      - যেকোনো 'mal_*' => 'Attack'
-      - অন্য সব => 'Unlabeled'
-    """
+
     s = str(label).lower().strip()
     if s == "normal":
         return "Normal"
-    if s.startswith("mal") or "attack" in s or "malic" in s:
+    if s.startswith("mal") or "attack" in s or "malic" in s or "Malicious" in s:
         return "Attack"
     return "Unlabeled"
 
 
 def flow_id(src_ip, dst_ip, src_port, dst_port, proto):
-    """
-    Symmetric 5-tuple (একই flow দুই দিক থেকেই এলেও একই id হবে)
-    """
+    # Symmetric 5-tuple
+
     src_port_str, dst_port_str = str(src_port), str(dst_port)
     try:
         a, b = ipaddress.ip_address(src_ip), ipaddress.ip_address(dst_ip)
@@ -72,14 +60,8 @@ PROTO_NAME_MAP = {
     "0": "Other",
 }
 
-
-# ================== PFCP LABEL DICT (from CSVs) ==================
+# LABEL DICT (from CSVs)
 def build_pfcp_flow_dict(root_folder):
-    """
-    PFCP CSV ফাইলগুলো থেকে flow_dict বানায়:
-      key: flow_id(...)
-      value: label ('Normal'/'Attack'/'Unlabeled')
-    """
     flow_dict = {}
 
     for root, _, files in os.walk(root_folder):
@@ -130,8 +112,6 @@ def build_pfcp_flow_dict(root_folder):
                     dst_port = str(row[dst_port_col]).strip()
                     proto_val = str(row[proto_col]).strip()
 
-                    # কিছু dataset–এ proto numeric / কিছুতে নাম; দুটোই accept
-                    # numeric হলে ওইটাই রাখি, না হলে default '0'
                     if proto_val.isdigit():
                         proto = proto_val
                     else:
@@ -149,13 +129,8 @@ def build_pfcp_flow_dict(root_folder):
     print(f"Flow dictionary size: {len(flow_dict)} flows")
     return flow_dict
 
-
-# ================== PACKET ITERATOR (PCAP -> rows) ==================
+# PACKET ITERATOR (PCAP -> rows)
 def iter_pfcp_packets(pcap_path, flow_dict):
-    """
-    One pcap -> এক এক করে dict row yield করে।
-    এই row গুলো দিয়েই পরে DataFrame বানাবো।
-    """
 
     cmd = [
         "tshark", "-r", pcap_path, "-T", "fields",
@@ -257,13 +232,8 @@ def iter_pfcp_packets(pcap_path, flow_dict):
             "has_app_data": has_app_data,
         }
 
-
-# ================== LOAD WHOLE DATASET INTO DATAFRAME ==================
+#  LOAD WHOLE DATASET INTO DATAFRAME
 def load_pfcp_packets(root_folder=DEFAULT_PFCP_ROOT):
-    """ পুরা PFCP dataset থেকে:
-      - CSV গুলো থেকে flow_dict বানাবে
-      - সব pcap থেকে packet row বের করবে
-      - সব মিলিয়ে একটি pandas DataFrame রিটার্ন করবে """
     flow_dict = build_pfcp_flow_dict(root_folder)
 
     rows = []
@@ -282,7 +252,6 @@ def load_pfcp_packets(root_folder=DEFAULT_PFCP_ROOT):
 
     df = pd.DataFrame(rows)
 
-    # basic dtype clean-up
     df["ts"] = df["ts"].astype(float)
     df["pkt_len"] = df["pkt_len"].astype(int)
     df["header_len"] = df["header_len"].astype(int)

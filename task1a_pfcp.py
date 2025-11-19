@@ -1,18 +1,13 @@
-#!/usr/bin/env python3
-import argparse
-
 import pandas as pd
 
 from core_pfcp import load_pfcp_packets
 
-# Default PFCP dataset root (change if needed)
 DEFAULT_PFCP_ROOT = "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP"
-
 
 def report_task1a_pfcp(df: pd.DataFrame):
     """Prints Task 1a statistics for the 5G-PFCP dataset."""
     if df is None or df.empty:
-        print("[Task1a-PFCP] DataFrame is empty, nothing to analyze.")
+        print("[DataFrame is empty, nothing to analyze.")
         return
 
     required_cols = {
@@ -24,14 +19,13 @@ def report_task1a_pfcp(df: pd.DataFrame):
     }
     missing = required_cols - set(df.columns)
     if missing:
-        print(f"[Task1a-PFCP] Missing required columns: {missing}")
+        print(f"[Missing required columns: {missing}")
         print("Check core_pfcp.py to ensure these fields are created.")
         return
 
     total_pkts = len(df)
-    print("\n" + "=" * 60)
+
     print("Task 1a – 5G-PFCP: Basic Traffic & Protocol Statistics")
-    print("=" * 60)
     print(f"Total packets in PFCP dataset: {total_pkts:,}")
 
     # ---------------- Label distribution ----------------
@@ -40,10 +34,6 @@ def report_task1a_pfcp(df: pd.DataFrame):
     for label, cnt in label_counts.items():
         frac = cnt / total_pkts if total_pkts > 0 else 0.0
         print(f"  {str(label):10s}: {cnt:10,} ({frac:.2%})")
-
-    total_attacks = int(label_counts.get("Attack", 0))
-    if total_attacks == 0:
-        total_attacks = 1  # avoid divide-by-zero, but logically "no attack" হবে
 
     # ---------------- Host pair statistics ----------------
     print("\n[Host pairs]")
@@ -169,19 +159,7 @@ def report_task1a_pfcp(df: pd.DataFrame):
         )
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Task 1a (5G-PFCP): Count and characterize application/transport protocols."
-    )
-    parser.add_argument(
-        "--pfcp_root",
-        default=DEFAULT_PFCP_ROOT,
-        help="Root folder containing 5G-PFCP PCAP files",
-    )
-    args = parser.parse_args()
-
-    root = args.pfcp_root
-    print(f"Processing 5G-PFCP dataset from: {root}")
-    df = load_pfcp_packets(root)
+    df = load_pfcp_packets(DEFAULT_PFCP_ROOT)
     report_task1a_pfcp(df)
 
 

@@ -1,10 +1,6 @@
-Processing 5G-PFCP dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_PFCP
 Flow dictionary size: 133 flows
 Loaded 3,081,410 packets into DataFrame.
-
-============================================================
 Task 1a – 5G-PFCP: Basic Traffic & Protocol Statistics
-============================================================
 Total packets in PFCP dataset: 3,081,410
 
 [Label distribution]

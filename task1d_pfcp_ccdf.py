@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
 import os
-import argparse
 import matplotlib.pyplot as plt
 
 from core_pfcp import load_pfcp_packets
@@ -11,8 +9,7 @@ DEFAULT_PFCP_ROOT = "/Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G
 
 def compute_ccdf(values):
     """ Manual CCDF computation. Input:  iterable of numeric values
-    Output: (xs, ys) where ys[i] = P(X >= xs[i])
-    """
+    Output: (xs, ys) where ys[i] = P(X >= xs[i]) """
     vals = sorted(values)
     n = len(vals)
     xs, ys = [], []
@@ -37,11 +34,9 @@ def safe_name(proto):
 
 
 def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag):
-    """
-    metric_col       : 'header_len' or 'app_len'
+    """ metric_col       : 'header_len' or 'app_len'
     metric_label     : nice name for axis/filename
-    with_attack_flag : True => only Attack packets, False => Normal+Unlabeled
-    """
+    with_attack_flag : True => only Attack packets, False => Normal+Unlabeled """
     if with_attack_flag:
         subset = df[df["is_attack"] == True].copy()
         tag = "with_attack"
@@ -51,7 +46,7 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
         tag = "without_attack"
         title_tag = "without attacks"
 
-    # শুধু positive length + NaN বাদ
+    # only positive length + NaN exclude
     series = subset[[metric_col, "app_proto"]].dropna()
     series = series[series[metric_col] > 0]
 
@@ -69,7 +64,7 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
     for proto in protocols:
         vals = series.loc[series["app_proto"] == proto, metric_col].tolist()
         if len(vals) < 2:
-            # sample খুব কম হলে CCDF অর্থপূর্ণ না
+            # if less sample ccdf is meaningless
             continue
 
         xs, ys = compute_ccdf(vals)
@@ -86,7 +81,7 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
             f"Application protocol: {proto}"
         )
         plt.grid(True, which="both", linestyle="--", alpha=0.5)
-        plt.xscale("log")  # length গুলো log-scale এ সুন্দর দেখা যায়
+        plt.xscale("log")
 
         fname = f"pfcp_ccdf_{metric_col}_{tag}_{safe_name(proto)}.png"
         out_path = os.path.join(out_dir, fname)
@@ -98,75 +93,31 @@ def plot_ccdf_for_metric(df, metric_col, metric_label, out_dir, with_attack_flag
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Task 1d (PFCP): CCDF of header and payload length per app protocol."
-    )
-    parser.add_argument(
-        "--pfcp_root",
-        default=DEFAULT_PFCP_ROOT,
-        help="Root folder containing 5G-PFCP PCAP files",
-    )
-    parser.add_argument(
-        "--out_dir",
-        default="pfcp_task1d_plots",
-        help="Output directory for CCDF plots",
-    )
-    args = parser.parse_args()
-
-    root = args.pfcp_root
-    out_dir = args.out_dir
+    root = DEFAULT_PFCP_ROOT
+    out_dir = "pfcp_task1d_plots"
     os.makedirs(out_dir, exist_ok=True)
 
     print(f"Processing 5G-PFCP dataset from: {root}")
     df = load_pfcp_packets(root)
 
-    if df is None or df.empty:
-        print("[PFCP-1d] DataFrame is empty, nothing to analyze.")
+    if df.empty:
+        print("DataFrame is empty, nothing to analyze.")
         return
 
     required_cols = {"header_len", "app_len", "app_proto", "is_attack"}
     missing = required_cols - set(df.columns)
     if missing:
-        print(f"[PFCP-1d] Missing columns in DataFrame: {missing}")
-        print("Check core_pfcp.py to ensure these fields are created.")
+        print(f"Missing columns: {missing}")
         return
 
-    print(f"[PFCP-1d] Loaded {len(df):,} packets into DataFrame for CCDF computation.")
+    plot_ccdf_for_metric(df, "header_len", "Header length", out_dir, True)
+    plot_ccdf_for_metric(df, "header_len", "Header length", out_dir, False)
 
-    # 1) Header length CCDF (with & without attacks)
-    plot_ccdf_for_metric(
-        df=df,
-        metric_col="header_len",
-        metric_label="Header length",
-        out_dir=out_dir,
-        with_attack_flag=True,
-    )
-    plot_ccdf_for_metric(
-        df=df,
-        metric_col="header_len",
-        metric_label="Header length",
-        out_dir=out_dir,
-        with_attack_flag=False,
-    )
+    plot_ccdf_for_metric(df, "app_len", "Application payload length", out_dir, True)
+    plot_ccdf_for_metric(df, "app_len", "Application payload length", out_dir, False)
 
-    # 2) Application payload length CCDF (with & without attacks)
-    plot_ccdf_for_metric(
-        df=df,
-        metric_col="app_len",
-        metric_label="Application payload length",
-        out_dir=out_dir,
-        with_attack_flag=True,
-    )
-    plot_ccdf_for_metric(
-        df=df,
-        metric_col="app_len",
-        metric_label="Application payload length",
-        out_dir=out_dir,
-        with_attack_flag=False,
-    )
     print("Task 1d (PFCP) CCDF plots generated.")
-    print(f"Plots saved in folder: {os.path.abspath(out_dir)}")
-
+    print(f"Plots saved in: {os.path.abspath(out_dir)}")
 
 if __name__ == "__main__":
     main()
