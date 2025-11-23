@@ -1,0 +1,114 @@
+Processing 5G-NIDD dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+NIDD root: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+Loaded 10983556 packets into DataFrame.
+
+[Packet length stats] Application protocols – WITH attacks (Attack packets only)
+             count    mean     std  median
+app_proto                                 
+TCP        1105999 418.754 592.676  66.000
+UDP         296172  42.000   0.073  42.000
+HTTP        105474 539.948 255.027 464.000
+DTLS             8 109.000   0.000 109.000
+NTP              7  90.000   0.000  90.000
+
+[Packet length stats] Application protocols – WITHOUT attacks (Normal+Unlabeled packets)
+                 count            mean            std          median
+app_proto                                                            
+GTP/UDP        3744557         879.307        646.691       1,432.000
+UDP            2314451         978.961        599.198       1,392.000
+GTP/TCP        1735492         336.192        511.509         106.000
+GTP/GQUIC       339551       1,195.550        475.890       1,432.000
+IPv4            310109         784.863        722.093          74.000
+GQUIC           289626       1,165.474        470.083       1,392.000
+TCP             270830         777.487        702.550       1,249.000
+GTP/HTTP        116502         578.302        244.023         525.000
+GTP/QUIC         85451         711.446        593.022         438.000
+QUIC             65311         704.982        599.106         519.000
+GTP/ICMP         35900         140.219         49.968         138.000
+GTP/TLSv1.3      33446         428.333        489.307         130.000
+ICMP             32537         104.536         62.419          98.000
+TLSv1.3          27373       1,085.451        520.334       1,478.000
+GTP/TLSv1.2      19889         269.980        255.824         195.000
+SCTP             17913         134.433        229.155          98.000
+TLSv1.2          13143         465.872        502.318         225.000
+S1AP              4425         268.894        378.792         106.000
+GTP/DNS           3476         206.008        110.429         175.000
+DNS               3055         172.751        112.177         137.000
+S1AP/NAS-EPS      2741         149.259         47.989         134.000
+GTP               1722          62.000          2.001          62.000
+GTP/TLSv1         1522         383.124        188.739         269.000
+GTP/SSHv2         1192         198.117        136.400         166.000
+TLSv1             1076         361.729        190.295         233.000
+SSHv2              802         162.399        138.230         130.000
+GTP/SSL            677         589.368        284.807         656.000
+HTTP               663         446.167        215.256         471.000
+SSL                493         746.880        378.092         616.000
+GTP/HTTP/JSON      249         472.831         23.047         471.000
+CDP                232         101.000          0.000         101.000
+LLDP               230          67.965          4.009          64.000
+GTP/NTP            200         127.160          1.820         126.000
+HTTP/JSON          199         431.000          0.000         431.000
+ARP                166          52.410          8.916          60.000
+NTP                126          90.000          0.000          90.000
+TZSP                62         291.258        393.379         110.000
+DHCP                58         342.000          0.000         342.000
+GTP/RADIUS          32          98.000          0.000          98.000
+GTP/SNMP            22         135.545          4.103         138.000
+GTP/RIPv1           16         102.000          0.000         102.000
+GTP/ECHO            16          82.000          0.000          82.000
+GTP/MDNS            16         124.000          0.000         124.000
+GTP/DTLS            16         145.000          0.000         145.000
+GTP/IPMB            16         101.000          0.000         101.000
+GTP/SRVLOC          16         132.000          0.000         132.000
+RADIUS              16          62.000          0.000          62.000
+GTP/Portmap         16         118.000          0.000         118.000
+GTP/XDMCP           16          85.000          0.000          85.000
+GTP/NBNS            16         128.000          0.000         128.000
+GTP/NAT-PMP         16          80.000          0.000          80.000
+GTP/ISAKMP          15         270.000          0.000         270.000
+GTP/NFS             15         118.000          0.000         118.000
+GTP/SSH             12         125.000          1.809         124.000
+SNMP                12          99.000          4.431         102.000
+GTP/CLDAP           10         129.000          0.000         129.000
+SSH                  8          88.000          0.000          88.000
+XDMCP                8          49.000          0.000          49.000
+ECHO                 8          46.000          0.000          46.000
+NAT-PMP              8          44.000          0.000          44.000
+IPMB                 8          65.000          0.000          65.000
+Packet/JSON          8 132,980,474.000 98,866,514.741 101,773,048.000
+SRVLOC               8          96.000          0.000          96.000
+RIPv1                8          66.000          0.000          66.000
+NBNS                 8          92.000          0.000          92.000
+MDNS                 8          88.000          0.000          88.000
+Portmap              8          82.000          0.000          82.000
+NFS                  7          82.000          0.000          82.000
+ISAKMP               7         234.000          0.000         234.000
+ICMPv6               6          67.333          4.131          70.000
+GTP/UNKNOWN          6         910.333        591.327       1,250.000
+UNKNOWN              6         873.667        590.758       1,214.000
+SSLv2                6       1,478.000          0.000       1,478.000
+CLDAP                4          93.000          0.000          93.000
+OCSP                 4         672.500        230.532         627.000
+GTP/OCSP             4         710.500        232.714         665.000
+TLSv1.1              3         365.000          0.000         365.000
+THRIFT               3       1,392.000          0.000       1,392.000
+GTP/THRIFT           3       1,432.000          0.000       1,432.000
+GTP/TLSv1.1          3         401.000          0.000         401.000
+GTP/TZSP             2         452.000        497.803         452.000
+GTP/MPEG TS          1         270.000            NaN         270.000
+GTP/SSLv2            1          74.000            NaN          74.000
+MPEG TS              1         230.000            NaN         230.000
+
+[Inter-arrival stats] WITH attacks (only Attack packets, unordered host pairs)
+  count : 1,507,654
+  mean  : 0.174080  seconds
+  std   : 207.728000  seconds
+  median: 0.000000  seconds
+
+[Inter-arrival stats] WITHOUT attacks (Normal+Unlabeled packets, unordered host pairs)
+  count : 9,473,922
+  mean  : 185.881927  seconds
+  std   : 539808.055091  seconds
+  median: 0.000000  seconds
+
+End of Task 1b (5G-NIDD)

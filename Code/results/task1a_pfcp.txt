@@ -1,0 +1,75 @@
+Flow dictionary size: 133 flows
+Loaded 3,081,410 packets into DataFrame.
+Task 1a – 5G-PFCP: Basic Traffic & Protocol Statistics
+Total packets in PFCP dataset: 3,081,410
+
+[Label distribution]
+  Normal    :  1,953,262 (63.39%)
+  Attack    :    854,793 (27.74%)
+  Unlabeled :    273,355 (8.87%)
+
+[Host pairs]
+  Unique host pairs           : 45
+  Host pairs with attack traffic: 8
+  Fraction of host pairs with attacks: 17.78%
+
+[Application-layer protocols]
+Number of application-layer protocols: 20
+
+existed application-layer protocols , and fraction / attack share / attack rate they have:
+App Proto                        Count  Frac(total)   AtkCount   AtkShare    AtkRate
+PFCP                         2,171,221       70.46%    792,688     92.73%     36.51%
+TCP                            453,412       14.71%     61,663      7.21%     13.60%
+UDP                            181,394        5.89%          0      0.00%      0.00%
+GTP/ICMP                       117,262        3.81%          0      0.00%      0.00%
+ICMP                            58,727        1.91%          0      0.00%      0.00%
+ARP                             54,852        1.78%          0      0.00%      0.00%
+SCTP                            40,878        1.33%          0      0.00%      0.00%
+MDNS                             1,692        0.05%          0      0.00%      0.00%
+HTTP2                              826        0.03%        146      0.02%     17.68%
+ICMPv6                             366        0.01%          0      0.00%      0.00%
+HTTP2/JSON                         222        0.01%         28      0.00%     12.61%
+TLSv1.2                            216        0.01%        216      0.03%    100.00%
+MONGO                              130        0.00%          0      0.00%      0.00%
+NGAP/NAS-5GS                        94        0.00%          0      0.00%      0.00%
+NGAP                                48        0.00%          0      0.00%      0.00%
+TLSv1.3                             36        0.00%         36      0.00%    100.00%
+HTTP2/JSON/NGAP                     12        0.00%          6      0.00%     50.00%
+HTTP2/JSON/NAS-5GS                  10        0.00%          4      0.00%     40.00%
+HTTP2/JSON/NAS-5GS/NGAP             10        0.00%          4      0.00%     40.00%
+HTTP                                 2        0.00%          2      0.00%    100.00%
+
+[Transport-layer protocols]
+
+How many and which transport-layer protocols exist, and what fraction / attack share / attack rate they have:
+Transport              Count  Frac(total)   AtkCount   AtkShare    AtkRate
+UDP                2,353,179       76.37%    792,688     92.73%     33.69%
+TCP                  454,876       14.76%     62,105      7.27%     13.65%
+Other                173,642        5.64%          0      0.00%      0.00%
+ICMP                  58,693        1.90%          0      0.00%      0.00%
+SCTP                  41,020        1.33%          0      0.00%      0.00%
+
+[Transport × Application protocol pairs]
+Transport       App Proto                        Count  Frac(total)
+UDP             PFCP                         2,171,221       70.46%
+TCP             TCP                            453,412       14.71%
+UDP             UDP                            181,394        5.89%
+Other           GTP/ICMP                       117,262        3.81%
+ICMP            ICMP                            58,693        1.90%
+Other           ARP                             54,852        1.78%
+SCTP            SCTP                            40,878        1.33%
+Other           MDNS                             1,128        0.04%
+TCP             HTTP2                              826        0.03%
+UDP             MDNS                               564        0.02%
+Other           ICMPv6                             366        0.01%
+TCP             HTTP2/JSON                         222        0.01%
+TCP             TLSv1.2                            216        0.01%
+TCP             MONGO                              130        0.00%
+SCTP            NGAP/NAS-5GS                        94        0.00%
+SCTP            NGAP                                48        0.00%
+TCP             TLSv1.3                             36        0.00%
+Other           ICMP                                34        0.00%
+TCP             HTTP2/JSON/NGAP                     12        0.00%
+TCP             HTTP2/JSON/NAS-5GS                  10        0.00%
+TCP             HTTP2/JSON/NAS-5GS/NGAP             10        0.00%
+TCP             HTTP                                 2        0.00%

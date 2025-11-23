@@ -1,0 +1,14 @@
+# Ignore huge PFCP CSVs from TaskSheet2
+TaskSheet2/pfcp_real_dirsize.csv
+TaskSheet2/pfcp_real_iat.csv
+TaskSheet2/pfcp_synth_dirsize.csv
+TaskSheet2/pfcp_synth_iat.csv
+
+# Ignore local stuff / big datasets
+5G_NIDD/
+5G_PFCP/
+.venv/
+.idea/
+__pycache__/
+.DS_Store
+.gitignore.save

@@ -1,0 +1,30 @@
+Processing 5G-NIDD dataset from: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+NIDD root: /Users/eshtisabbiroutlook.com/PycharmProjects/5G_Project/5G_NIDD
+Loaded 10983556 packets into DataFrame.
+
+========================================
+Task 1c: Host-pair statistics (5G-NIDD)
+========================================
+Total host pairs:                 1,974
+Host pairs with at least 1 attack: 6
+Fraction of host pairs with attacks: 0.30%
+
+
+========================================
+Inter-arrival time – WITHOUT attacks (same host pair, same application protocol, non-attack packets only)
+========================================
+Number of IAT samples : 9,470,620
+Mean IAT              : 21.389484 seconds
+Std dev of IAT        : 2447.599142 seconds
+Median IAT            : 0.000000 seconds
+
+
+========================================
+Inter-arrival time – WITH attacks (same host pair, same application protocol, attack packets only)
+========================================
+Number of IAT samples : 1,507,646
+Mean IAT              : 0.006878 seconds
+Std dev of IAT        : 2.018189 seconds
+Median IAT            : 0.000000 seconds
+
+End of Task 1c (5G-NIDD)
